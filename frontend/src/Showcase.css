@@ -1,0 +1,1464 @@
+/* General Body and Page Layout */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #0d0d0d;
+  color: #e0e0e0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.showcase-page-container, .project-details-container {
+  max-width: 1000px;
+  min-width: 300px;
+  margin: 0 auto;
+  padding: 5px;
+}
+
+/* Header and Navigation (Common to both) */
+.showcase-top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0px 0;
+  margin-bottom: 20px;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+}
+
+.back-button:focus {
+  outline: none;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.post-idea-btn {
+  background: linear-gradient(to right, #7190fd, #9c77fe);
+  color: #ffffff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  outline: none;
+}
+
+.post-idea-btn:focus {
+  outline: none;
+}
+
+
+.month-tabs {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  margin-bottom: 30px;
+  border-bottom: 1px solid #333;
+}
+.month-tabs::-webkit-scrollbar {
+  display: none;
+}
+.tab {
+  background: none;
+  border: none;
+  color: #888;
+  padding: 10px 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  position: relative;
+  outline: none;
+}
+
+.tab:focus {
+  outline: none;
+}
+
+.tab.active {
+  color: #fff;
+  font-weight: 600;
+}
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(to right, #7190fd, #9c77fe);
+  border-radius: 2px 2px 0 0;
+}
+
+/* Hero Banner (Main Page) */
+.hero-banner {
+  position: relative;
+  height: 300px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.banner-image-overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+.banner-image-overlay img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+filter: none; 
+  /* Use !important as a last resort to override any other conflicting CSS, 
+     like the .features-banner filter, without having to remove it. */
+  filter: none !important;
+}
+.banner-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  color: #fff;
+  padding: 20px;
+}
+.banner-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin: 0;
+}
+.banner-subtitle {
+  font-size: 1.1rem;
+  margin-bottom: 25px;
+}
+.prize-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+  padding-left: 10px;
+}
+.prize-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+}
+.rank-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: #FFD700;
+  color: #0d0d0d;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 700;
+}
+.rank-2 { background-color: #C0C0C0; }
+.rank-3 { background-color: #CD7F32; }
+.prize-text {
+  font-size: 0.85rem;
+  color: #b0b0b0;
+}
+.prize-amount {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.tap-to-read {
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 30px;
+  display: block;
+  text-decoration: underline;
+}
+.company-logo-corner {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 3;
+}
+.m-logo {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #fff;
+}
+
+/* Search and Project List */
+.search-and-lucky-wrapper {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+.search-input-container {
+  position: relative;
+  flex-grow: 1;
+}
+.search-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #666;
+}
+.search-input {
+  width: 100%;
+  padding: 12px 15px 12px 45px;
+  border: 1px solid #333;
+  border-radius: 8px;
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #7190fd;
+}
+
+.lucky-btn {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  border: 1px solid #333;
+  padding: 12px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  outline: none;
+}
+
+.lucky-btn:focus {
+  outline: none;
+}
+
+.idea-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+.startup-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #1a1a1a;
+  padding: 15px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  outline: none;
+}
+.startup-card:hover {
+  background-color: #242424;
+}
+
+.startup-card:focus {
+  outline: none;
+}
+
+.card-content {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+.card-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+}
+.card-details {
+  flex-grow: 1;
+}
+.card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.3;
+}
+.card-description {
+  font-size: 0.85rem;
+  color: #a0a0a0;
+  margin: 0;
+}
+.card-upvote {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-left: 20px;
+}
+.upvote-arrow {
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #555;
+  transition: color 0.2s;
+}
+.startup-card:hover .upvote-arrow {
+  color: linear-gradient(to right, #7190fd, #9c77fe);
+}
+.upvote-count {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.no-results {
+  text-align: center;
+  padding: 30px;
+  color: #888;
+}
+
+/* Project Details Page */
+.project-details-container {
+  padding: 0px;
+  width: 100%;
+}
+.project-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #1a1a1a;
+  padding: 20px;
+  border-radius: 12px;
+}
+.project-info {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.project-logo {
+  width: 60px;
+  height: 60px;
+  border-radius: 10px;
+}
+.project-name {
+  font-size: 1.8rem;
+  margin: 0 0 5px;
+}
+.project-tagline {
+  font-size: 1rem;
+  color: #a0a0a0;
+  margin: 0;
+}
+.project-upvote-btn {
+  background: linear-gradient(to right, #7190fd, #9c77fe);
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  outline: none;
+}
+
+.project-upvote-btn:focus {
+  outline: none;
+}
+
+.project-meta-data {
+  display: flex;
+  justify-content: space-between;
+  background-color: #1a1a1a;
+  padding: 15px 20px;
+  border-radius: 12px;
+  margin-top: 20px;
+}
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.meta-date, .meta-count {
+  font-weight: 600;
+}
+.meta-label {
+  font-size: 0.8rem;
+  color: #888;
+}
+.meta-link-btn {
+  background: none;
+  border: 1px solid #333;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  outline: none;
+}
+
+.meta-link-btn:focus {
+  outline: none;
+}
+
+.section-divider {
+  height: 1px;
+  background-color: #333;
+  margin: 20px 0;
+}
+.section-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+.creator-profile {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+.creator-avatar, .upvoter-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+.creator-details {
+  flex-grow: 1;
+}
+.creator-name {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+.creator-role {
+  font-size: 0.8rem;
+  color: #a0a0a0;
+  margin: 0;
+}
+.creator-follow-btn {
+  background: linear-gradient(to right, #7190fd, #9c77fe);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  outline: none;
+}
+
+.creator-follow-btn:focus {
+  outline: none;
+}
+
+.upvoters-list {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.view-more-btn {
+  background: none;
+  border: none;
+  color: linear-gradient(to right, #7190fd, #9c77fe);
+  cursor: pointer;
+  outline: none;
+}
+
+.view-more-btn:focus {
+  outline: none;
+}
+
+.description-text p {
+  line-height: 1.6;
+}
+.concept-label {
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #fff;
+}
+.features-banner {
+ height: auto;/* Allow height to be determined by content */
+  max-height: 400px; /* Maintain a maximum size if desired */
+  aspect-ratio: 16 / 9; /* Optional: Define a common video/banner aspect ratio */
+  overflow: hidden;
+  border-radius: 12px;
+  width: 100%;
+}  
+
+.features-banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: brightness(0.8);
+}
+/* --- REPLICATED COMMENT SECTION STYLES (Matching Screenshot) --- */
+
+.comment-section-wrapper {
+    /* Sets the overall dark background for the comment view */
+    background-color: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 50%); 
+    color: #f0f0f0; 
+    /* Overrides container padding to be full width (assuming container has 20px padding) */
+    margin: 20px -20px 0 -20px; 
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.comment-header-bar {
+    display: flex;
+    align-items: center;
+    padding: 20px 20px 15px 20px;
+    border-bottom: 1px solid #333; 
+}
+
+
+.comment-title-header {
+    font-size: 1.4rem; 
+    font-weight: 500;
+    margin: 0;
+    color: #f0f0f0;
+}
+
+/* --- Comment Input Area (Add a comment...) --- */
+
+.comment-input-container-replicate {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    gap: 10px;
+}
+
+.comment-input-field {
+    flex-grow: 1;
+    padding: 12px 15px;
+    border: none;
+    border-radius: 25px; /* Fully rounded capsule shape */
+    background-color: #333; /* Dark background for input */
+    color: #ccc;
+    font-size: 15px;
+    outline: none;
+    transition: background-color 0.2s;
+}
+
+.comment-input-field::placeholder {
+    color: #999;
+}
+
+.post-comment-btn-replicate {
+    width: 55px;
+    height: 48px;
+    border-radius: 50%; /* Circular button */
+    background: linear-gradient(to right, #7190fd, #9c77fe); /* Purple color from the image */
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    transition: background-color 0.2s;
+    outline: none;
+}
+
+.post-comment-btn-replicate:hover:not(:disabled) {
+    background-color: #8E44AD;
+}
+
+.post-comment-btn-replicate:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.post-comment-btn-replicate:focus {
+    outline: none;
+}
+
+/* --- Comment List --- */
+
+.comments-list-replicate {
+    padding: 10px 20px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.comment-item-replicate {
+    display: flex;
+    gap: 15px;
+}
+
+.comment-avatar-replicate {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.comment-content-wrapper-replicate {
+    flex-grow: 1;
+    /* This creates the dark comment block/card effect */
+    background-color: #333; 
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.comment-user-header-replicate {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.comment-user-replicate {
+    font-weight: 600;
+    font-size: 14px;
+    color: #f0f0f0;
+}
+
+.comment-timestamp-replicate {
+    font-size: 12px;
+    color: #aaa;
+    font-weight: 400;
+}
+
+.comment-text-replicate {
+    font-size: 15px;
+    color: #ccc;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.no-comments-replicate {
+    text-align: center;
+    color: #999;
+    font-style: italic;
+    padding: 20px;
+    border: 1px dashed #444;
+    border-radius: 5px;
+}
+/* --- Load More Button Styles --- */
+.load-more-wrapper {
+    display: flex;
+    justify-content: center;
+    padding-top: 5px;
+}
+
+.more-comments-btn {
+    background: none;
+    border: none;
+    color: linear-gradient(to right, #7190fd, #9c77fe); /* Matches the purple button color */
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    outline: none;
+}
+
+.more-comments-btn:hover {
+    background: linear-gradient(to right, #7190fd, #9c77fe);
+}
+
+.more-comments-btn:focus {
+    outline: none;
+}
+
+.btn-primary {
+  background: linear-gradient(to right, #7190fd, #9c77fe);
+  color: #ffffff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: scale(1.03);
+}
+
+.btn-primary:focus {
+  outline: none;
+}
+
+.remove-image-btn {
+    position: absolute;
+    top: -5px; /* Adjust as needed for position */
+    right: -5px; /* Adjust as needed for position */
+    background-color: rgba(255, 0, 0, 0.9); /* Darker, controlled color */
+    color: white; /* Ensures the X icon is white */
+    border: none;
+    border-radius: 50%; /* Makes it a circle */
+    width: 20px; /* Size of the button area */
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1; /* Helps vertically center the icon */
+    z-index: 10;
+    transition: background-color 0.2s;
+    outline: none;
+}
+
+.remove-image-btn:hover {
+    background-color: red; /* Make it bright red on hover */
+}
+
+.remove-image-btn:focus {
+    outline: none;
+}
+
+/* === Modal Styles === */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.modal-content {
+    background-color: #1a1a1a;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.add-idea-modal {
+    margin: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    border-bottom: 1px solid #333;
+    flex-shrink: 0;
+}
+
+.modal-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+    color: #ffffff;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+    outline: none;
+}
+
+.modal-close:hover {
+    color: #ffffff;
+}
+
+.modal-close:focus {
+    outline: none;
+}
+
+.modal-form {
+    padding: 15px 25px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.modal-form::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-form::-webkit-scrollbar-track {
+    background: #0d0d0d;
+    border-radius: 4px;
+}
+
+.modal-form::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 4px;
+}
+
+.modal-form::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.form-group {
+    margin-bottom: 8px;
+}
+
+.form-group-flex {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-direction: column;
+}
+
+.flex-half {
+    flex: 1;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 3px;
+    font-weight: 500;
+    color: #e0e0e0;
+    font-size: 0.85rem;
+}
+
+.form-input,
+.form-textarea {
+    width: 100%;
+    padding: 8px 12px;
+    background-color: #333;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: #e0e0e0;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+    font-family: inherit;
+    transition: border-color 0.2s;
+    outline: none;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+    border-color: #7190fd;
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.validation-error-message {
+    background-color: rgba(220, 53, 69, 0.1);
+    border: 1px solid #dc3545;
+    color: #ff6b7a;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-size: 0.85rem;
+}
+
+.image-upload-container {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.small-preview .image-preview-item {
+    width: 70px;
+    height: 70px;
+}
+
+.wide-preview .image-preview-item {
+    width: 100%;
+    height: 85px;
+}
+
+.image-preview-item {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.image-preview-item .post-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.upload-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background-color: #333;
+    border: 2px dashed #555;
+    border-radius: 8px;
+    color: #999;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.8rem;
+    outline: none;
+}
+
+.upload-btn:hover {
+    border-color: #7190fd;
+    color: #7190fd;
+    background-color: rgba(113, 144, 253, 0.05);
+}
+
+.upload-btn:focus {
+    outline: none;
+}
+
+.upload-btn.error-border {
+    border-color: #dc3545;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 12px;
+    margin-top: 5px;
+    border-top: 1px solid #333;
+}
+
+.btn-secondary {
+    background-color: #333;
+    color: #e0e0e0;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s;
+    outline: none;
+}
+
+.btn-secondary:hover {
+    background-color: #444;
+}
+
+.btn-secondary:focus {
+    outline: none;
+}
+
+.disabled-btn {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.disabled-btn:hover {
+    opacity: 0.5;
+    transform: none;
+}
+
+/* Banner Image Styles */
+.full-width-banner-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.9);
+}
+
+/* === MEDIA QUERIES FOR RESPONSIVE DESIGN === */
+
+/* Tablets and small laptops */
+@media (max-width: 768px) {
+    .showcase-page-container, .project-details-container {
+        padding: 15px;
+    }
+
+    .showcase-top-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+
+    .logo {
+        font-size: 1.3rem;
+        text-align: center;
+    }
+
+    .post-idea-btn {
+        width: 100%;
+    }
+
+    .hero-banner {
+        height: 200px;
+    }
+
+    .banner-title {
+        font-size: 1.8rem;
+    }
+
+    .banner-subtitle {
+        font-size: 0.95rem;
+    }
+
+    .search-and-lucky-wrapper {
+        flex-direction: column;
+    }
+
+    .lucky-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .startup-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .card-upvote {
+        flex-direction: row;
+        margin-left: 0;
+        gap: 8px;
+    }
+
+    .project-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+
+    .project-info {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .project-upvote-btn {
+        width: 100%;
+    }
+
+    .project-meta-data {
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .meta-item {
+        flex: 1;
+        min-width: calc(50% - 10px);
+    }
+
+    .modal-content {
+        max-width: 95%;
+        margin: 10px;
+    }
+
+    .modal-header {
+        padding: 15px 20px;
+    }
+
+    .modal-title {
+        font-size: 1.2rem;
+    }
+
+    .modal-form {
+        padding: 15px 20px;
+    }
+
+    .form-group-flex {
+        flex-direction: column;
+    }
+
+    .flex-half {
+        width: 100%;
+    }
+
+    .month-tabs {
+        justify-content: flex-start;
+    }
+
+    .tab {
+        padding: 8px 15px;
+        font-size: 0.9rem;
+    }
+}
+
+/* Mobile phones */
+@media (max-width: 480px) {
+    .showcase-page-container, .project-details-container {
+        padding: 10px;
+    }
+
+    .logo {
+        font-size: 1.2rem;
+    }
+
+    .post-idea-btn {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+
+    .hero-banner {
+        height: auto;
+        margin-bottom: 20px;
+    }
+
+    .banner-title {
+        font-size: 1.4rem;
+    }
+
+    .banner-subtitle {
+        font-size: 0.85rem;
+        margin-bottom: 15px;
+    }
+
+    .prize-badge {
+        font-size: 0.8rem;
+    }
+
+    .rank-icon {
+        width: 24px;
+        height: 24px;
+        font-size: 0.8rem;
+    }
+
+    .prize-amount {
+        font-size: 1rem;
+    }
+
+    .search-input {
+        font-size: 0.9rem;
+        padding: 10px 15px 10px 40px;
+    }
+
+    .search-icon {
+        left: 12px;
+    }
+
+    .startup-card {
+        padding: 12px 15px;
+    }
+
+    .card-logo {
+        width: 35px;
+        height: 35px;
+    }
+
+    .card-title {
+        font-size: 1rem;
+    }
+
+    .card-description {
+        font-size: 0.8rem;
+    }
+
+    .card-upvote {
+        gap: 6px;
+    }
+
+    .upvote-count {
+        font-size: 0.85rem;
+    }
+
+    .project-logo {
+        width: 50px;
+        height: 50px;
+    }
+
+    .project-name {
+        font-size: 1.4rem;
+    }
+
+    .project-tagline {
+        font-size: 0.9rem;
+    }
+
+    .project-meta-data {
+        padding: 12px 15px;
+    }
+
+    .meta-item {
+        min-width: 100%;
+    }
+
+    .meta-date, .meta-count {
+        font-size: 0.9rem;
+    }
+
+    .meta-label {
+        font-size: 0.75rem;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+    }
+
+    .creator-avatar, .upvoter-avatar {
+        width: 35px;
+        height: 35px;
+    }
+
+    .creator-name {
+        font-size: 0.95rem;
+    }
+
+    .creator-role {
+        font-size: 0.75rem;
+    }
+
+    .modal-overlay {
+        padding: 10px;
+    }
+
+    .modal-content {
+        max-width: 100%;
+        max-height: 95vh;
+    }
+
+    .modal-header {
+        padding: 12px 15px;
+    }
+
+    .modal-title {
+        font-size: 1.1rem;
+    }
+
+    .modal-form {
+        padding: 12px 15px;
+    }
+
+    .form-label {
+        font-size: 0.8rem;
+    }
+
+    .form-input,
+    .form-textarea {
+        padding: 8px 10px;
+        font-size: 0.85rem;
+    }
+
+    .form-textarea {
+        min-height: 70px;
+    }
+
+    .upload-btn {
+        padding: 8px 12px;
+        font-size: 0.75rem;
+    }
+
+    .small-preview .image-preview-item {
+        width: 60px;
+        height: 60px;
+    }
+
+    .wide-preview .image-preview-item {
+        height: 70px;
+    }
+
+    .btn-primary, .btn-secondary {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+
+    .modal-actions {
+        padding-top: 10px;
+        gap: 8px;
+    }
+
+    .comment-input-field {
+        font-size: 14px;
+        padding: 10px 12px;
+    }
+
+    .post-comment-btn-replicate {
+        width: 55px;
+        height: 55px;
+    }
+
+    .comment-avatar-replicate {
+        width: 30px;
+        height: 30px;
+    }
+
+    .comment-content-wrapper-replicate {
+        padding: 12px;
+    }
+
+    .comment-user-replicate {
+        font-size: 13px;
+    }
+
+    .comment-text-replicate {
+        font-size: 14px;
+    }
+
+    .features-banner {
+        height: 250px;
+    }
+}
+
+/* Very small devices */
+@media (max-width: 360px) {
+    .logo {
+        font-size: 1.1rem;
+    }
+
+    .banner-title {
+        font-size: 1.2rem;
+    }
+
+    .card-title {
+        font-size: 0.95rem;
+    }
+
+    .project-name {
+        font-size: 1.2rem;
+    }
+
+    .modal-title {
+        font-size: 1rem;
+    }
+
+    .form-label {
+        font-size: 0.75rem;
+    }
+
+    .form-input,
+    .form-textarea {
+        font-size: 0.8rem;
+        padding: 7px 10px;
+    }
+}
+
+/* Large screens */
+@media (min-width: 1200px) {
+    .showcase-page-container, .project-details-container {
+        max-width: 1200px;
+    }
+
+    .hero-banner {
+        height: 350px;
+    }
+
+    .banner-title {
+        font-size: 3rem;
+    }
+
+    .startup-card {
+        padding: 18px 25px;
+    }
+
+    .modal-content {
+        max-width: 700px;
+    }
+}
+/* Update your existing styles or add this block to Showcase.css */
+
+.loading-container {
+    /* Centralize the spinner in the middle of the content area */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px; /* Ensure it takes up vertical space */
+    width: 100%;
+    color: #9ca3af; /* Light gray text */
+    /* Position for the spinner in the screenshot is slightly down from the center, 
+       but this centering is standard practice */
+}
+
+/* The element that holds the visual spinner */
+.loading-spinner {
+    width: 48px; /* Slightly smaller size */
+    height: 48px;
+    position: relative;
+    border: none;
+    margin-bottom: 20px; 
+}
+
+/* * Create the classic, rotating arc spinner (matching the image) using :before 
+ * Note: We are reverting to solid colors for borders and relying on transparent 
+ * sides to create the arc shape, as shown in the image.
+ */
+.loading-spinner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    
+    /* 1. Base solid border */
+    border: 3px solid transparent; 
+    
+    /* 2. Apply gradient colors to the visible arc sections */
+    /* Using the light blue for the top/start of the arc */
+    border-top-color: #7190fd; 
+    /* Using the purple for the right/end of the arc */
+    border-right-color: #9c77fe; 
+    
+    /* Animation for the spin */
+    animation: spin-custom 1.2s linear infinite;
+    /* Adding a light shadow for depth */
+    box-shadow: 0 0 5px rgba(156, 119, 254, 0.5); 
+}
+
+/* Create the static, solid gradient-matching center dot using :after */
+.loading-spinner::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    /* Start the element small and centered */
+    transform: translate(-50%, -50%) scale(1);
+    width: 12px;
+    height: 12px;
+    /* Using the end color of the gradient for a consistent look */
+    background-color: #9c77fe; 
+    border-radius: 50%;
+    
+    /* KEY CHANGE: Apply the new wave animation */
+    animation: pulse-wave 2s ease-out infinite;
+}
+
+/* Keyframes for the custom spin (remains the same) */
+@keyframes spin-custom {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* KEY CHANGE: New Keyframes for the outward wave effect */
+@keyframes pulse-wave {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.9;
+    }
+    50% {
+        /* Pulse outwards, stopping right before the spinning ring */
+        transform: translate(-50%, -50%) scale(4); 
+        opacity: 0.6;
+    }
+    100% {
+        /* Expand fully and fade out, restarting the wave */
+        transform: translate(-50%, -50%) scale(8);
+        opacity: 0;
+    }
+}
+
+.loading-container p {
+    font-size: 1rem;
+    color: #6b7280; /* Slightly darker text for contrast on dark background */
+}
+/* Remove or update this in your CSS */
+.back-arrow-icon.hidden {
+    display: none;
+}
+
+/* Keep only this */
+.back-arrow-icon {
+    cursor: pointer;
+    color: white;
+    transition: color 0.2s;
+}
+
+.back-arrow-icon:hover {
+    color: #000;
+}
