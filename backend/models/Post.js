@@ -246,38 +246,29 @@ postSchema.virtual('commentsArray').get(function() {
 });
 
 // ✅ FIXED: Pre-save hook with better initialization
-postSchema.pre('save', function(next) {
-    // Update regular comment count
+postSchema.pre('save', async function () {
+
     if (this.isModified('commentData')) {
         this.comments = this.commentData.length;
     }
-    
-    // Update showcase comment count
+
     if (this.isModified('showcaseComments')) {
         this.commentCount = this.showcaseComments.length;
     }
-    
-    // Ensure arrays are initialized
+
     if (this.type === 'showcase') {
-        if (!this.upvoters) this.upvoters = [];
-        if (!this.showcaseComments) this.showcaseComments = [];
-        if (!this.likedBy) this.likedBy = [];
+        this.upvoters ??= [];
+        this.showcaseComments ??= [];
+        this.likedBy ??= [];
     } else {
-        if (!this.likedBy) this.likedBy = [];
-        if (!this.commentData) this.commentData = [];
+        this.likedBy ??= [];
+        this.commentData ??= [];
     }
-    
-    // Set default values for showcase posts
+
     if (this.type === 'showcase') {
-        if (!this.month) {
-            this.month = new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' });
-        }
-        if (!this.launchedDate) {
-            this.launchedDate = 'Coming Soon';
-        }
+        this.month ??= new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' });
+        this.launchedDate ??= 'Coming Soon';
     }
-    
-    next();
 });
 
 // Virtual for checking if post is a showcase
