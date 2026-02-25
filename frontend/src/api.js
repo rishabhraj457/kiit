@@ -1,7 +1,7 @@
 const getApiUrl = () => {
   // If no environment variable, use production fallback
   if (!import.meta.env.VITE_BACKEND_URL) {
-    return 'https://confique.onrender.com/api';
+    return 'https://kiit-s2yz.onrender.com/api';
   }
   
   let baseUrl = import.meta.env.VITE_BACKEND_URL;

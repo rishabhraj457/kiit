@@ -6,7 +6,7 @@ import { Search, X, Image as ImageIcon, ThumbsUp, AlertCircle, Trash2, MoreVerti
 import StartupBanner from './assets/showcase-2.png';
 
 // Default API URL for production
-const DEFAULT_API_URL = "https://confique.onrender.com";
+const DEFAULT_API_URL = "https://kiit-s2yz.onrender.com";
 
 // --- Configuration for ProjectDetailsPage components ---
 const INITIAL_VISIBLE_LIMIT = 1;
