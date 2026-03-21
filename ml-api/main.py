@@ -2,12 +2,21 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
+# 🔥 CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 MODEL_NAME = "Shrutigunu/hate-speech-roberta"
 
-# 🔥 DEVICE (GPU if available)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
@@ -25,7 +34,6 @@ def home():
 @app.post("/predict")
 def predict(input: InputText):
     try:
-        # 🔥 Limit input size (important)
         inputs = tokenizer(
             input.text,
             return_tensors="pt",
@@ -41,13 +49,17 @@ def predict(input: InputText):
         pred = torch.argmax(probs).item()
         confidence = probs.max().item()
 
-        # 🔥 Safer labeling (simple + stable)
-        label = "harmful" if confidence > 0.8 and pred != 0 else "safe"
+        # 🔥 Correct label mapping
+        id2label = model.config.id2label
+        pred_label = id2label[pred].lower()
+
+        label = "harmful" if "hate" in pred_label or "offensive" in pred_label else "safe"
 
         return {
             "label": label,
             "confidence": float(confidence),
-            "class": int(pred)
+            "class": int(pred),
+            "raw_label": pred_label
         }
 
     except Exception as e:
