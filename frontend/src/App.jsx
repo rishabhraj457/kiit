@@ -5343,7 +5343,7 @@ const callApi = async (endpoint, options = {}) => {
                         <div className="header-left">
                             <a href="#" className="app-logo-link" onClick={(e) => { e.preventDefault(); setActiveSection('home'); setSelectedPost(null); setSelectedEvent(null); }}>
                                 <img src={confiquelogo} width="24" height="24" alt="Confique Logo" />
-                                <span className="app-title">Confique</span>
+                                <span className="app-title">Confique v2</span>
                             </a>
                         </div>
                         {activeSection === 'events' && isLoggedIn && (
