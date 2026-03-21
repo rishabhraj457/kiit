@@ -427,7 +427,7 @@ const CommentSection = ({ comments, onAddComment, onCloseComments, currentUser, 
             const res = await onAddComment(newCommentText);
 
 if (res?.flagged) {
-    alert("⚠️ Your comment was flagged as harmful");
+    setShowCommentAlert(true);
 }
 
 setNewCommentText('');
@@ -437,7 +437,9 @@ setNewCommentText('');
     };
 
     // Debug logging to help diagnose the issue
-    console.log('CommentSection - isLoggedIn:', isLoggedIn, 'currentUser:', currentUser, 'actuallyLoggedIn:', actuallyLoggedIn);
+    if (process.env.NODE_ENV === "development") {
+    console.log('CommentSection:', { isLoggedIn, currentUser, actuallyLoggedIn });
+}
 
     return (
         <div className="comment-section">
@@ -482,12 +484,12 @@ setNewCommentText('');
             </div>
             
             <CustomMessageModal
-                isOpen={showCommentAlert}
-                onClose={() => setShowCommentAlert(false)}
-                title="Empty Comment"
-                message="Please enter some text to add a comment."
-                showConfirm={false}
-            />
+    isOpen={showCommentAlert}
+    onClose={() => setShowCommentAlert(false)}
+    title="Warning"
+    message="⚠️ Your comment was flagged as harmful"
+    showConfirm={false}
+/>
         </div>
     );
 };

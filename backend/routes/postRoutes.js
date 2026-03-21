@@ -269,14 +269,26 @@ let result = { label: "safe", confidence: 0 };
 
 try {
     const mlResult = await checkText(content);
-    if (mlResult) result = mlResult;
+    if (mlResult && typeof mlResult === "object") {
+    result = mlResult;
+}
 } catch (error) {
     console.error("❌ ML Service Error (post):", error.message);
 }
 
-
+if (process.env.NODE_ENV === "development") {
+    console.log("ML RESULT:", result);
+}
 // 🚫 BLOCK harmful posts
-if (result?.label === "harmful"){
+const label = (result?.label || "").toLowerCase();
+
+const isHarmful =
+    label.includes("harmful") ||
+    label.includes("hate") ||
+    label.includes("offensive") ||
+    label.includes("toxic");
+
+if (isHarmful){
     return res.status(400).json({
         success: false,
         message: "🚫 Harmful content detected. Post blocked.",
@@ -788,13 +800,21 @@ let result = { label: "safe", confidence: 0 };
 
 try {
     const mlResult = await checkText(text);
-    if (mlResult) result = mlResult;
+    if (mlResult && typeof mlResult === "object") {
+    result = mlResult;
+}
 } catch (error) {
     console.error("❌ ML Service Error (comment):", error.message);
 }
 
 // ✅ Allow but flag if harmful
-const isHarmful = result?.label === "harmful";
+const label = (result?.label || "").toLowerCase();
+
+const isHarmful =
+    label.includes("harmful") ||
+    label.includes("hate") ||
+    label.includes("offensive") ||
+    label.includes("toxic");
         
         // ✅ CONSISTENT: Use the same avatar helper
         const getAvatarUrl = (avatar) => {
