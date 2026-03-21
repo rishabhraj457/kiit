@@ -31,7 +31,7 @@ const uploadImage = async (image) => {
 // Helper function to extract Cloudinary public ID
 const extractPublicId = (url) => {
     if (!url || !url.includes('cloudinary')) return null;
-    
+
     try {
         const parts = url.split('/');
         const uploadIndex = parts.findIndex(part => part === 'upload');
@@ -45,7 +45,7 @@ const extractPublicId = (url) => {
     return null;
 };
 
-// ✅ Helper function to populate showcase posts
+// Helper function to populate showcase posts
 const populateShowcasePost = async (post) => {
     if (post.type === 'showcase') {
         await post.populate('upvoters', 'name avatar');
@@ -54,21 +54,28 @@ const populateShowcasePost = async (post) => {
     return post;
 };
 
-// ✅ Helper function to transform showcase post for frontend
+// Helper function to transform showcase post for frontend
 const transformShowcasePostForFrontend = (post) => {
     if (post.type !== 'showcase') return post;
-    
+
     const transformed = post.toObject ? post.toObject() : { ...post };
-    
-    // Ensure consistent field names for frontend
+
     transformed.comments = transformed.showcaseComments || [];
     transformed.commentCount = transformed.commentCount || (transformed.showcaseComments ? transformed.showcaseComments.length : 0);
-    
+
     return transformed;
 };
 
+// Shared avatar helper
+const getAvatarUrl = (avatar) => {
+    if (!avatar) return 'https://placehold.co/40x40/cccccc/000000?text=A';
+    if (typeof avatar === 'object' && avatar.url) return avatar.url;
+    if (typeof avatar === 'string') return avatar;
+    return 'https://placehold.co/40x40/cccccc/000000?text=A';
+};
+
 // ==============================================
-// ✅ BASIC VALIDATION FUNCTIONS (replaced express-validator)
+// BASIC VALIDATION FUNCTIONS
 // ==============================================
 
 const validateMongoId = (id) => {
@@ -85,12 +92,12 @@ const validatePostType = (type) => {
 };
 
 // ==============================================
-// ✅ ROUTES
+// ROUTES
 // ==============================================
 
-// @desc    Get all posts (UPDATED WITH PROPER POPULATION)
+// @desc    Get all posts
 // @route   GET /api/posts
-// @access  Public (for approved posts), Private (for all posts as admin)
+// @access  Public (approved posts) / Private (all posts for admin)
 router.get('/', asyncHandler(async (req, res) => {
     let posts;
     let isAdmin = false;
@@ -114,7 +121,6 @@ router.get('/', asyncHandler(async (req, res) => {
         posts = await Post.find({ status: 'approved' }).sort({ timestamp: -1 });
     }
 
-    // ✅ ONLY ADDITION: Populate showcase posts for frontend compatibility
     const populatedPosts = await Promise.all(
         posts.map(async (post) => {
             if (post.type === 'showcase') {
@@ -136,17 +142,47 @@ router.get('/pending-events', protect, admin, asyncHandler(async (req, res) => {
     res.json(pendingEvents);
 }));
 
+// FIX #5: These static routes MUST be above /:id to prevent "showcase" being captured as an :id param
+// @desc    Get top showcase posts
+// @route   GET /api/posts/showcase/top
+// @access  Public
+router.get('/showcase/top', asyncHandler(async (req, res) => {
+    const { limit = 10, month = null } = req.query;
+
+    const topShowcases = await Post.findTopShowcases(parseInt(limit), month);
+
+    res.json({
+        success: true,
+        posts: topShowcases,
+        count: topShowcases.length
+    });
+}));
+
+// @desc    Get showcase analytics
+// @route   GET /api/posts/showcase/analytics
+// @access  Private (Admin only)
+router.get('/showcase/analytics', protect, admin, asyncHandler(async (req, res) => {
+    const { month = null } = req.query;
+
+    const analytics = await Post.getShowcaseAnalytics(month);
+
+    res.json({
+        success: true,
+        analytics: analytics[0] || {},
+        month: month || 'all'
+    });
+}));
+
 // @desc    Get all registrations for a specific event
 // @route   GET /api/posts/:id/registrations
 // @access  Private (Event creator or Admin only)
 router.get('/:id/registrations', protect, asyncHandler(async (req, res) => {
     const eventId = req.params.id;
 
-    // Basic validation
     if (!validateMongoId(eventId)) {
-        return res.status(400).json({ 
+        return res.status(400).json({
             success: false,
-            message: 'Invalid event ID' 
+            message: 'Invalid event ID'
         });
     }
 
@@ -171,34 +207,78 @@ router.get('/:id/registrations', protect, asyncHandler(async (req, res) => {
     res.json(registrations);
 }));
 
-// @desc    Get a single post by ID (UPDATED WITH POPULATION AND CACHING)
+// FIX #6: Added 'type' to .select() so post.type check works correctly
+// @desc    Get showcase post comments with pagination
+// @route   GET /api/posts/:id/showcase-comments
+// @access  Public
+router.get('/:id/showcase-comments', asyncHandler(async (req, res) => {
+    if (!validateMongoId(req.params.id)) {
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid post ID'
+        });
+    }
+
+    const { page = 1, limit = 10 } = req.query;
+    const post = await Post.findById(req.params.id)
+        .populate('showcaseComments.user', 'name avatar')
+        .select('showcaseComments commentCount type'); // FIX: added 'type'
+
+    if (!post) {
+        return res.status(404).json({
+            success: false,
+            message: 'Post not found'
+        });
+    }
+
+    if (post.type !== 'showcase') {
+        return res.status(400).json({
+            success: false,
+            message: 'Only showcase posts can use this comment endpoint'
+        });
+    }
+
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+
+    const comments = post.showcaseComments.slice(startIndex, endIndex);
+    const totalComments = post.showcaseComments.length;
+
+    res.json({
+        success: true,
+        comments: comments,
+        totalPages: Math.ceil(totalComments / limit),
+        currentPage: parseInt(page),
+        totalComments,
+        postId: post._id
+    });
+}));
+
+// @desc    Get a single post by ID
 // @route   GET /api/posts/:id
 // @access  Public
 router.get('/:id', asyncHandler(async (req, res) => {
     const cacheKey = `post_${req.params.id}`;
     let post = cache.get(cacheKey);
-    
+
     if (!post) {
         post = await Post.findById(req.params.id);
-        
+
         if (post) {
-            // ✅ ONLY ADDITION: Populate showcase data for showcase posts
             if (post.type === 'showcase') {
                 await post.populate('upvoters', 'name avatar');
                 await post.populate('showcaseComments.user', 'name avatar');
-                
-                // Track views for showcase posts
+
                 post.views = (post.views || 0) + 1;
                 await post.save();
-                
+
                 post = transformShowcasePostForFrontend(post);
             }
-            
-            // Cache for 5 minutes
+
             cache.set(cacheKey, post, 300);
         }
     }
-    
+
     if (post) {
         res.json(post);
     } else {
@@ -211,15 +291,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
 // @access  Private
 router.post('/', protect, asyncHandler(async (req, res) => {
     const { _id: userId, name: authorNameFromUser, avatar: avatarFromUser } = req.user;
-    
-    // ✅ CONSISTENT: Use the same avatar helper as auth.js
-    const getAvatarUrl = (avatar) => {
-        if (!avatar) return 'https://placehold.co/40x40/cccccc/000000?text=A';
-        if (typeof avatar === 'object' && avatar.url) return avatar.url;
-        if (typeof avatar === 'string') return avatar;
-        return 'https://placehold.co/40x40/cccccc/000000?text=A';
-    };
-    
+
     const authorAvatarFinal = getAvatarUrl(avatarFromUser);
 
     const {
@@ -264,46 +336,49 @@ router.post('/', protect, asyncHandler(async (req, res) => {
             message: 'Content is required'
         });
     }
-// 🔥 ML CHECK (ADD HERE)
-let result = { label: "safe", confidence: 0 };
 
-try {
-    const mlResult = await checkText(content);
-    if (mlResult && typeof mlResult === "object") {
-    result = mlResult;
-}
-} catch (error) {
-    console.error("❌ ML Service Error (post):", error.message);
-}
+    // 🔥 ML CHECK
+    let result = { label: "safe", confidence: 0 };
 
-if (process.env.NODE_ENV === "development") {
-    console.log("ML RESULT:", result);
-}
-// 🚫 BLOCK harmful posts
-const label = (result?.label || "").toLowerCase();
+    try {
+        const mlResult = await checkText(content);
+        if (mlResult && typeof mlResult === "object") {
+            result = mlResult;
+        }
+    } catch (error) {
+        console.error("❌ ML Service Error (post):", error.message);
+    }
 
-const isHarmful =
-    label.includes("harmful") ||
-    label.includes("hate") ||
-    label.includes("offensive") ||
-    label.includes("toxic");
+    if (process.env.NODE_ENV === "development") {
+        console.log("ML RESULT:", result);
+    }
 
-if (isHarmful){
-    return res.status(400).json({
-        success: false,
-        message: "🚫 Harmful content detected. Post blocked.",
-        flag: true,
-        confidence: result.confidence
-    });
-}
-    // STARTUP SHOWCASE: Check submission deadline for showcase posts
+    // 🚫 BLOCK harmful posts
+    const postLabel = String(result?.label || "").toLowerCase();
+
+    const isPostHarmful =
+        postLabel.includes("harmful") ||
+        postLabel.includes("hate") ||
+        postLabel.includes("offensive") ||
+        postLabel.includes("toxic");
+
+    if (isPostHarmful) {
+        return res.status(400).json({
+            success: false,
+            message: "🚫 Harmful content detected. Post blocked.",
+            flag: true,
+            confidence: result.confidence
+        });
+    }
+
+    // STARTUP SHOWCASE: Check submission deadline
     if (type === 'showcase') {
         const SUBMISSION_DEADLINE = new Date('2025-10-31T23:59:59').getTime();
         const now = new Date().getTime();
         if (now > SUBMISSION_DEADLINE) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                message: 'Submissions are closed for Startup Showcase. The deadline was October 31, 2025.' 
+                message: 'Submissions are closed for Startup Showcase. The deadline was October 31, 2025.'
             });
         }
     }
@@ -338,7 +413,7 @@ if (isHarmful){
         timestamp: new Date(),
     };
 
-    // STARTUP SHOWCASE: Set default values for showcase posts
+    // STARTUP SHOWCASE: Set default values
     if (type === 'showcase') {
         newPostData.upvotes = 0;
         newPostData.upvoters = [];
@@ -351,7 +426,6 @@ if (isHarmful){
         newPostData.views = 0;
     }
 
-    // ✅ PRESERVED: Original field cleanup logic
     if (type === 'event') {
         if (qrCodeUrl) newPostData.paymentQRCode = qrCodeUrl;
         newPostData.paymentMethod = ['link', 'qr'].includes(paymentMethod) ? paymentMethod : undefined;
@@ -370,7 +444,6 @@ if (isHarmful){
         newPostData.paymentLink = undefined;
         newPostData.paymentQRCode = undefined;
     } else if (type === 'showcase') {
-        // Clean up showcase posts - remove event-specific fields
         newPostData.location = undefined;
         newPostData.eventStartDate = undefined;
         newPostData.eventEndDate = undefined;
@@ -391,7 +464,6 @@ if (isHarmful){
         newPostData.culturalPaymentQRCode = undefined;
         newPostData.availableDates = undefined;
     } else {
-        // Regular posts cleanup
         newPostData.location = undefined;
         newPostData.eventStartDate = undefined;
         newPostData.eventEndDate = undefined;
@@ -416,30 +488,28 @@ if (isHarmful){
     try {
         const post = new Post(newPostData);
         const createdPost = await post.save();
-        
-        // Clear relevant caches
+
         cache.del('posts_all');
-        
-        // ✅ ONLY ADDITION: Populate the created post before returning
+
         const populatedPost = await populateShowcasePost(createdPost);
         const transformedPost = transformShowcasePostForFrontend(populatedPost);
-        
+
         res.status(201).json({
             success: true,
             post: transformedPost
         });
     } catch (error) {
         console.error('❌ Post creation error details:', error);
-        
+
         if (error.name === 'ValidationError') {
             const messages = Object.values(error.errors).map(val => val.message);
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                message: `Validation Failed: ${messages.join(', ')}` 
+                message: `Validation Failed: ${messages.join(', ')}`
             });
         }
-        
-        res.status(500).json({ 
+
+        res.status(500).json({
             success: false,
             message: 'Internal server error during post creation',
             error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
@@ -451,11 +521,10 @@ if (isHarmful){
 // @route   PUT /api/posts/:id
 // @access  Private (Author or Admin only)
 router.put('/:id', protect, asyncHandler(async (req, res) => {
-    // Basic validation
     if (!validateMongoId(req.params.id)) {
-        return res.status(400).json({ 
+        return res.status(400).json({
             success: false,
-            message: 'Invalid post ID' 
+            message: 'Invalid post ID'
         });
     }
 
@@ -481,39 +550,37 @@ router.put('/:id', protect, asyncHandler(async (req, res) => {
         ...rest
     } = req.body;
 
-    // Validate input
     if (type && !validatePostType(type)) {
-        return res.status(400).json({ 
+        return res.status(400).json({
             success: false,
-            message: 'Invalid post type' 
+            message: 'Invalid post type'
         });
     }
 
     if (title && !validateText(title, 1, 100)) {
-        return res.status(400).json({ 
+        return res.status(400).json({
             success: false,
-            message: 'Title must be between 1 and 100 characters' 
+            message: 'Title must be between 1 and 100 characters'
         });
     }
 
     if (content && !validateText(content, 1)) {
-        return res.status(400).json({ 
+        return res.status(400).json({
             success: false,
-            message: 'Content is required' 
+            message: 'Content is required'
         });
     }
 
-    // ✅ PRESERVED: Original image handling logic
     if (images !== undefined) {
         const oldImagePublicIds = post.images
             .map(url => extractPublicId(url))
             .filter(id => id);
 
         if (oldImagePublicIds.length > 0) {
-            try { 
-                await cloudinary.api.delete_resources(oldImagePublicIds); 
-            } catch (cloudinaryErr) { 
-                console.error('Cloudinary deletion failed for old images:', cloudinaryErr); 
+            try {
+                await cloudinary.api.delete_resources(oldImagePublicIds);
+            } catch (cloudinaryErr) {
+                console.error('Cloudinary deletion failed for old images:', cloudinaryErr);
             }
         }
 
@@ -522,7 +589,6 @@ router.put('/:id', protect, asyncHandler(async (req, res) => {
         post.images = newImageUrls.filter(url => url !== null);
     }
 
-    // ✅ PRESERVED: Original QR code handling logic
     let newQrCodeUrl = undefined;
     let oldQrCodeUrl = post.type === 'event' ? post.paymentQRCode : post.culturalPaymentQRCode;
     let newQrCodeData = post.type === 'event' ? rest.paymentQRCode : rest.culturalPaymentQRCode;
@@ -531,10 +597,10 @@ router.put('/:id', protect, asyncHandler(async (req, res) => {
         if (oldQrCodeUrl) {
             const publicId = extractPublicId(oldQrCodeUrl);
             if (publicId) {
-                try { 
-                    await cloudinary.uploader.destroy(publicId); 
-                } catch (cloudinaryErr) { 
-                    console.error('Cloudinary deletion failed for old QR code:', cloudinaryErr); 
+                try {
+                    await cloudinary.uploader.destroy(publicId);
+                } catch (cloudinaryErr) {
+                    console.error('Cloudinary deletion failed for old QR code:', cloudinaryErr);
                 }
             }
         }
@@ -556,7 +622,6 @@ router.put('/:id', protect, asyncHandler(async (req, res) => {
         post.status = status;
     }
 
-    // ✅ PRESERVED: Original field cleanup logic
     if (post.type === 'event' && newQrCodeUrl !== undefined) {
         post.paymentQRCode = newQrCodeUrl;
     } else if (post.type === 'culturalEvent' && newQrCodeUrl !== undefined) {
@@ -574,7 +639,6 @@ router.put('/:id', protect, asyncHandler(async (req, res) => {
         post.paymentLink = undefined;
         post.paymentQRCode = undefined;
     } else if (post.type === 'showcase') {
-        // Clean up showcase posts
         post.location = undefined;
         post.eventStartDate = undefined;
         post.eventEndDate = undefined;
@@ -595,7 +659,6 @@ router.put('/:id', protect, asyncHandler(async (req, res) => {
         post.culturalPaymentQRCode = undefined;
         post.availableDates = undefined;
     } else {
-        // Regular posts cleanup
         post.location = undefined;
         post.eventStartDate = undefined;
         post.eventEndDate = undefined;
@@ -619,11 +682,10 @@ router.put('/:id', protect, asyncHandler(async (req, res) => {
 
     try {
         const updatedPost = await post.save();
-        
-        // Clear caches
+
         cache.del(`post_${req.params.id}`);
         cache.del('posts_all');
-        
+
         res.json({
             success: true,
             post: updatedPost
@@ -631,9 +693,9 @@ router.put('/:id', protect, asyncHandler(async (req, res) => {
     } catch (error) {
         if (error.name === 'ValidationError') {
             const messages = Object.values(error.errors).map(val => val.message);
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                message: `Validation Failed during update: ${messages.join(', ')}` 
+                message: `Validation Failed during update: ${messages.join(', ')}`
             });
         }
         throw error;
@@ -645,9 +707,9 @@ router.put('/:id', protect, asyncHandler(async (req, res) => {
 // @access  Private (Admin only)
 router.put('/approve-event/:id', protect, admin, asyncHandler(async (req, res) => {
     if (!validateMongoId(req.params.id)) {
-        return res.status(400).json({ 
+        return res.status(400).json({
             success: false,
-            message: 'Invalid event ID' 
+            message: 'Invalid event ID'
         });
     }
 
@@ -659,11 +721,10 @@ router.put('/approve-event/:id', protect, admin, asyncHandler(async (req, res) =
         }
         event.status = 'approved';
         const updatedEvent = await event.save();
-        
-        // Clear caches
+
         cache.del(`post_${req.params.id}`);
         cache.del('posts_all');
-        
+
         res.json(updatedEvent);
     } else {
         res.status(404).json({ message: 'Event not found' });
@@ -675,9 +736,9 @@ router.put('/approve-event/:id', protect, admin, asyncHandler(async (req, res) =
 // @access  Private (Admin only)
 router.delete('/reject-event/:id', protect, admin, asyncHandler(async (req, res) => {
     if (!validateMongoId(req.params.id)) {
-        return res.status(400).json({ 
+        return res.status(400).json({
             success: false,
-            message: 'Invalid event ID' 
+            message: 'Invalid event ID'
         });
     }
 
@@ -688,14 +749,14 @@ router.delete('/reject-event/:id', protect, admin, asyncHandler(async (req, res)
             return res.status(400).json({ message: 'Only events and cultural events can be rejected through this route' });
         }
         const publicIdsToDelete = [];
-        
+
         if (event.images && event.images.length > 0) {
             event.images.forEach(url => {
                 const publicId = extractPublicId(url);
                 if (publicId) publicIdsToDelete.push(publicId);
             });
         }
-        
+
         const qrCodeUrl = event.type === 'event' ? event.paymentQRCode : event.culturalPaymentQRCode;
         if (qrCodeUrl) {
             const publicId = extractPublicId(qrCodeUrl);
@@ -709,14 +770,13 @@ router.delete('/reject-event/:id', protect, admin, asyncHandler(async (req, res)
                 console.error('Cloudinary deletion failed for some resources:', cloudinaryErr);
             }
         }
-        
+
         await event.deleteOne();
         await Registration.deleteMany({ eventId: event._id });
-        
-        // Clear caches
+
         cache.del(`post_${req.params.id}`);
         cache.del('posts_all');
-        
+
         res.json({ message: 'Event rejected and removed' });
     } else {
         res.status(404).json({ message: 'Event not found' });
@@ -728,9 +788,9 @@ router.delete('/reject-event/:id', protect, admin, asyncHandler(async (req, res)
 // @access  Private (Author or Admin only)
 router.delete('/:id', protect, asyncHandler(async (req, res) => {
     if (!validateMongoId(req.params.id)) {
-        return res.status(400).json({ 
+        return res.status(400).json({
             success: false,
-            message: 'Invalid post ID' 
+            message: 'Invalid post ID'
         });
     }
 
@@ -739,7 +799,7 @@ router.delete('/:id', protect, asyncHandler(async (req, res) => {
         if (post.userId.toString() !== req.user._id.toString() && !req.user.isAdmin) {
             return res.status(403).json({ message: 'You are not authorized to delete this post' });
         }
-        
+
         const publicIdsToDelete = [];
         if (post.images && post.images.length > 0) {
             post.images.forEach(url => {
@@ -747,13 +807,13 @@ router.delete('/:id', protect, asyncHandler(async (req, res) => {
                 if (publicId) publicIdsToDelete.push(publicId);
             });
         }
-        
+
         const qrCodeUrl = post.type === 'event' ? post.paymentQRCode : post.culturalPaymentQRCode;
         if (qrCodeUrl) {
             const publicId = extractPublicId(qrCodeUrl);
             if (publicId) publicIdsToDelete.push(publicId);
         }
-        
+
         if (publicIdsToDelete.length > 0) {
             try {
                 await cloudinary.api.delete_resources(publicIdsToDelete);
@@ -761,16 +821,15 @@ router.delete('/:id', protect, asyncHandler(async (req, res) => {
                 console.error('Cloudinary deletion failed for some resources:', cloudinaryErr);
             }
         }
-        
+
         await post.deleteOne();
         if (post.type === 'event' || post.type === 'culturalEvent') {
             await Registration.deleteMany({ eventId: post._id });
         }
-        
-        // Clear caches
+
         cache.del(`post_${req.params.id}`);
         cache.del('posts_all');
-        
+
         res.json({ message: 'Post removed' });
     } else {
         res.status(404).json({ message: 'Post not found' });
@@ -782,76 +841,78 @@ router.delete('/:id', protect, asyncHandler(async (req, res) => {
 // @access  Private
 router.post('/:id/comments', protect, asyncHandler(async (req, res) => {
     if (!validateMongoId(req.params.id)) {
-        return res.status(400).json({ 
+        return res.status(400).json({
             success: false,
-            message: 'Invalid post ID' 
+            message: 'Invalid post ID'
         });
     }
 
-    const { text } = req.body;
-    const post = await Post.findById(req.params.id);
-    if (post) {
-        if (!validateText(text, 1, 1000)) {
-            return res.status(400).json({ message: 'Comment text must be between 1 and 1000 characters' });
-        }
-        // 🔥 ML CHECK FOR COMMENT
-// 🔥 ML CHECK FOR COMMENT
-let result = { label: "safe", confidence: 0 };
+    const text = req.body?.text;
 
-try {
-    const mlResult = await checkText(text);
-    if (mlResult && typeof mlResult === "object") {
-    result = mlResult;
-}
-} catch (error) {
-    console.error("❌ ML Service Error (comment):", error.message);
-}
-
-// ✅ Allow but flag if harmful
-const label = (result?.label || "").toLowerCase();
-
-const isHarmful =
-    label.includes("harmful") ||
-    label.includes("hate") ||
-    label.includes("offensive") ||
-    label.includes("toxic");
-        
-        // ✅ CONSISTENT: Use the same avatar helper
-        const getAvatarUrl = (avatar) => {
-            if (!avatar) return 'https://placehold.co/40x40/cccccc/000000?text=A';
-            if (typeof avatar === 'object' && avatar.url) return avatar.url;
-            if (typeof avatar === 'string') return avatar;
-            return 'https://placehold.co/40x40/cccccc/000000?text=A';
-        };
-        
-        const userAvatar = getAvatarUrl(req.user.avatar);
-        
-        const newComment = {
-            author: req.user.name,
-            authorAvatar: userAvatar,
-            text,
-            timestamp: new Date(),
-            userId: req.user?._id || null,
-            flag: isHarmful,
-    confidence: result?.confidence || 0
-        };
-        post.commentData.push(newComment);
-        post.comments = post.commentData.length;
-        await post.save();
-        
-        // Clear cache
-        cache.del(`post_${req.params.id}`);
-        
-        res.status(201).json({
-    comments: post.commentData,
-    flagged: isHarmful,
-    message: isHarmful
-        ? "⚠️ Comment posted but flagged as harmful"
-        : "✅ Comment posted"
-});
-    } else {
-        res.status(404).json({ message: 'Post not found' });
+    // FIX #2: Single auth guard (was duplicated)
+    if (!req.user) {
+        return res.status(401).json({ message: "User not authenticated" });
     }
+
+    if (!text || typeof text !== "string") {
+        return res.status(400).json({ message: "Invalid comment text" });
+    }
+
+    // FIX #4: Validate length BEFORE hitting DB and ML service
+    if (!validateText(text, 1, 1000)) {
+        return res.status(400).json({ message: 'Comment text must be between 1 and 1000 characters' });
+    }
+
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+        return res.status(404).json({ message: 'Post not found' });
+    }
+
+    // FIX #1: Clean single ML check (removed nested try-catch)
+    let result = { label: "safe", confidence: 0 };
+
+    try {
+        const mlResult = await checkText(text);
+        if (mlResult && typeof mlResult === "object") {
+            result = mlResult;
+        }
+    } catch (error) {
+        console.error("❌ ML Service Error (comment):", error.message);
+    }
+
+    const label = (result?.label || "").toLowerCase();
+
+    const isHarmful =
+        label.includes("harmful") ||
+        label.includes("hate") ||
+        label.includes("offensive") ||
+        label.includes("toxic");
+
+    const userAvatar = getAvatarUrl(req.user.avatar);
+
+    const newComment = {
+        author: req.user.name,
+        authorAvatar: userAvatar,
+        text,
+        timestamp: new Date(),
+        userId: req.user._id,
+        flag: isHarmful,
+        confidence: result?.confidence || 0
+    };
+
+    post.commentData.push(newComment);
+    post.comments = post.commentData.length;
+    await post.save();
+
+    cache.del(`post_${req.params.id}`);
+
+    res.status(201).json({
+        comments: post.commentData,
+        flagged: isHarmful,
+        message: isHarmful
+            ? "⚠️ Comment posted but flagged as harmful"
+            : "✅ Comment posted"
+    });
 }));
 
 // @desc    Like a post (for regular posts)
@@ -859,9 +920,9 @@ const isHarmful =
 // @access  Private
 router.put('/:id/like', protect, asyncHandler(async (req, res) => {
     if (!validateMongoId(req.params.id)) {
-        return res.status(400).json({ 
+        return res.status(400).json({
             success: false,
-            message: 'Invalid post ID' 
+            message: 'Invalid post ID'
         });
     }
 
@@ -873,10 +934,9 @@ router.put('/:id/like', protect, asyncHandler(async (req, res) => {
         post.likes += 1;
         post.likedBy.push(req.user._id);
         await post.save();
-        
-        // Clear cache
+
         cache.del(`post_${req.params.id}`);
-        
+
         res.json({ likes: post.likes, likedBy: post.likedBy });
     } else {
         res.status(404).json({ message: 'Post not found' });
@@ -888,9 +948,9 @@ router.put('/:id/like', protect, asyncHandler(async (req, res) => {
 // @access  Private
 router.put('/:id/unlike', protect, asyncHandler(async (req, res) => {
     if (!validateMongoId(req.params.id)) {
-        return res.status(400).json({ 
+        return res.status(400).json({
             success: false,
-            message: 'Invalid post ID' 
+            message: 'Invalid post ID'
         });
     }
 
@@ -904,10 +964,9 @@ router.put('/:id/unlike', protect, asyncHandler(async (req, res) => {
         }
         post.likedBy = post.likedBy.filter(userId => userId.toString() !== req.user._id.toString());
         await post.save();
-        
-        // Clear cache
+
         cache.del(`post_${req.params.id}`);
-        
+
         res.json({ likes: post.likes, likedBy: post.likedBy });
     } else {
         res.status(404).json({ message: 'Post not found' });
@@ -919,9 +978,9 @@ router.put('/:id/unlike', protect, asyncHandler(async (req, res) => {
 // @access  Private
 router.post('/:id/report', protect, asyncHandler(async (req, res) => {
     if (!validateMongoId(req.params.id)) {
-        return res.status(400).json({ 
+        return res.status(400).json({
             success: false,
-            message: 'Invalid post ID' 
+            message: 'Invalid post ID'
         });
     }
 
@@ -947,14 +1006,13 @@ router.post('/:id/report', protect, asyncHandler(async (req, res) => {
 }));
 
 // ==============================================
-// ✅ SHOWCASE-SPECIFIC ROUTES (NEW FUNCTIONALITY)
+// SHOWCASE-SPECIFIC ROUTES
 // ==============================================
 
-// @desc    Upvote a showcase post (NEW ROUTE)
+// @desc    Upvote a showcase post
 // @route   PUT /api/posts/:id/upvote
 // @access  Private
 router.put('/:id/upvote', protect, asyncHandler(async (req, res) => {
-    // Basic validation
     if (!validateMongoId(req.params.id)) {
         return res.status(400).json({
             success: false,
@@ -962,25 +1020,22 @@ router.put('/:id/upvote', protect, asyncHandler(async (req, res) => {
         });
     }
 
-    console.log('🔼 Upvote request received for post:', req.params.id, 'from user:', req.user._id);
-    
     const post = await Post.findById(req.params.id);
-    
+
     if (!post) {
-        return res.status(404).json({ 
+        return res.status(404).json({
             success: false,
-            message: 'Post not found' 
+            message: 'Post not found'
         });
     }
 
     if (post.type !== 'showcase') {
-        return res.status(400).json({ 
+        return res.status(400).json({
             success: false,
-            message: 'Only showcase posts can be upvoted' 
+            message: 'Only showcase posts can be upvoted'
         });
     }
 
-    // Prevent users from upvoting their own posts
     if (post.userId.toString() === req.user._id.toString()) {
         return res.status(400).json({
             success: false,
@@ -988,22 +1043,19 @@ router.put('/:id/upvote', protect, asyncHandler(async (req, res) => {
         });
     }
 
-    const hasUpvoted = post.upvoters.some(upvoterId => 
+    const hasUpvoted = post.upvoters.some(upvoterId =>
         upvoterId.toString() === req.user._id.toString()
     );
 
     if (hasUpvoted) {
-        // Remove upvote
         post.upvotes = Math.max(0, post.upvotes - 1);
         post.upvoters = post.upvoters.filter(
             userId => userId.toString() !== req.user._id.toString()
         );
     } else {
-        // Add upvote
         post.upvotes += 1;
         post.upvoters.push(req.user._id);
 
-        // Create notification for post creator
         try {
             const notification = new Notification({
                 user: post.userId,
@@ -1021,10 +1073,9 @@ router.put('/:id/upvote', protect, asyncHandler(async (req, res) => {
     try {
         await post.save();
         await post.populate('upvoters', 'name avatar');
-        
-        // Clear cache
+
         cache.del(`post_${req.params.id}`);
-        
+
         res.json({
             success: true,
             upvotes: post.upvotes,
@@ -1032,22 +1083,21 @@ router.put('/:id/upvote', protect, asyncHandler(async (req, res) => {
             hasUpvoted: !hasUpvoted,
             postId: post._id
         });
-        
+
     } catch (saveError) {
         console.error('❌ Failed to save upvote:', saveError);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
             message: 'Failed to save upvote',
-            error: saveError.message 
+            error: saveError.message
         });
     }
 }));
 
-// @desc    Add comment to showcase post (NEW ROUTE)
+// @desc    Add comment to showcase post
 // @route   POST /api/posts/:id/showcase-comments
 // @access  Private
 router.post('/:id/showcase-comments', protect, asyncHandler(async (req, res) => {
-    // Basic validation
     if (!validateMongoId(req.params.id)) {
         return res.status(400).json({
             success: false,
@@ -1055,7 +1105,11 @@ router.post('/:id/showcase-comments', protect, asyncHandler(async (req, res) => 
         });
     }
 
-    const { text } = req.body;
+    const text = req.body?.text;
+
+    if (!text || typeof text !== "string") {
+        return res.status(400).json({ message: "Invalid comment text" });
+    }
 
     if (!validateText(text, 1, 1000)) {
         return res.status(400).json({
@@ -1067,26 +1121,18 @@ router.post('/:id/showcase-comments', protect, asyncHandler(async (req, res) => 
     const post = await Post.findById(req.params.id);
 
     if (!post) {
-        return res.status(404).json({ 
+        return res.status(404).json({
             success: false,
-            message: 'Post not found' 
+            message: 'Post not found'
         });
     }
 
     if (post.type !== 'showcase') {
-        return res.status(400).json({ 
+        return res.status(400).json({
             success: false,
-            message: 'Only showcase posts can use this comment endpoint' 
+            message: 'Only showcase posts can use this comment endpoint'
         });
     }
-
-    // ✅ CONSISTENT: Use the same avatar helper
-    const getAvatarUrl = (avatar) => {
-        if (!avatar) return 'https://placehold.co/40x40/cccccc/000000?text=A';
-        if (typeof avatar === 'object' && avatar.url) return avatar.url;
-        if (typeof avatar === 'string') return avatar;
-        return 'https://placehold.co/40x40/cccccc/000000?text=A';
-    };
 
     const userAvatar = getAvatarUrl(req.user.avatar);
 
@@ -1101,14 +1147,13 @@ router.post('/:id/showcase-comments', protect, asyncHandler(async (req, res) => 
     if (!post.showcaseComments) {
         post.showcaseComments = [];
     }
-    
+
     post.showcaseComments.push(comment);
     post.commentCount = post.showcaseComments.length;
 
     try {
         await post.save();
 
-        // Create notification for post creator
         if (post.userId.toString() !== req.user._id.toString()) {
             try {
                 const notification = new Notification({
@@ -1125,9 +1170,9 @@ router.post('/:id/showcase-comments', protect, asyncHandler(async (req, res) => 
         }
 
         await post.populate('showcaseComments.user', 'name avatar');
-        
+
         const newComment = post.showcaseComments[post.showcaseComments.length - 1];
-        
+
         const populatedComment = {
             _id: newComment._id,
             id: newComment._id,
@@ -1142,100 +1187,23 @@ router.post('/:id/showcase-comments', protect, asyncHandler(async (req, res) => 
             authorAvatar: userAvatar
         };
 
-        // Clear cache
         cache.del(`post_${req.params.id}`);
-        
+
         res.status(201).json({
             success: true,
             comment: populatedComment,
             post: transformShowcasePostForFrontend(post),
             commentCount: post.commentCount
         });
-        
+
     } catch (saveError) {
         console.error('❌ Failed to save comment:', saveError);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
             message: 'Failed to save comment',
-            error: saveError.message 
+            error: saveError.message
         });
     }
-}));
-
-// @desc    Get showcase post comments with pagination (NEW ROUTE)
-// @route   GET /api/posts/:id/showcase-comments
-// @access  Public
-router.get('/:id/showcase-comments', asyncHandler(async (req, res) => {
-    if (!validateMongoId(req.params.id)) {
-        return res.status(400).json({ 
-            success: false,
-            message: 'Invalid post ID' 
-        });
-    }
-
-    const { page = 1, limit = 10 } = req.query;
-    const post = await Post.findById(req.params.id)
-        .populate('showcaseComments.user', 'name avatar')
-        .select('showcaseComments commentCount');
-
-    if (!post) {
-        return res.status(404).json({ 
-            success: false,
-            message: 'Post not found' 
-        });
-    }
-
-    if (post.type !== 'showcase') {
-        return res.status(400).json({ 
-            success: false,
-            message: 'Only showcase posts can use this comment endpoint' 
-        });
-    }
-
-    const startIndex = (page - 1) * limit;
-    const endIndex = page * limit;
-
-    const comments = post.showcaseComments.slice(startIndex, endIndex);
-    const totalComments = post.showcaseComments.length;
-
-    res.json({
-        success: true,
-        comments: comments,
-        totalPages: Math.ceil(totalComments / limit),
-        currentPage: parseInt(page),
-        totalComments,
-        postId: post._id
-    });
-}));
-
-// @desc    Get top showcase posts
-// @route   GET /api/posts/showcase/top
-// @access  Public
-router.get('/showcase/top', asyncHandler(async (req, res) => {
-    const { limit = 10, month = null } = req.query;
-    
-    const topShowcases = await Post.findTopShowcases(parseInt(limit), month);
-    
-    res.json({
-        success: true,
-        posts: topShowcases,
-        count: topShowcases.length
-    });
-}));
-
-// @desc    Get showcase analytics
-// @route   GET /api/posts/showcase/analytics
-// @access  Private (Admin only)
-router.get('/showcase/analytics', protect, admin, asyncHandler(async (req, res) => {
-    const { month = null } = req.query;
-    
-    const analytics = await Post.getShowcaseAnalytics(month);
-    
-    res.json({
-        success: true,
-        analytics: analytics[0] || {},
-        month: month || 'all'
-    });
 }));
 
 module.exports = router;
