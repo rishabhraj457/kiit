@@ -390,11 +390,11 @@ const CommentItem = ({ comment, currentUser }) => {
                         {new Date(comment.timestamp).toLocaleDateString()} at {new Date(comment.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                 </div>
-                <p className={`comment-text ${comment.flag ? "harmful-comment" : ""}`}>
+                <p className={`comment-text ${comment.isSpam ? "harmful-comment" : ""}`}>
     {comment.text}
 </p>
 
-{comment.flag && (
+{comment.isSpam && (
     <span className="harmful-badge">⚠️ Harmful</span>
 )}
             </div>
@@ -426,7 +426,7 @@ const CommentSection = ({ comments, onAddComment, onCloseComments, currentUser, 
         if (newCommentText.trim()) {
             const res = await onAddComment(newCommentText);
 
-if (res?.flagged) {
+if (res?.isSpam){
     setShowCommentAlert(true);
 }
 
