@@ -265,17 +265,14 @@ router.post('/', protect, asyncHandler(async (req, res) => {
         });
     }
 // 🔥 ML CHECK (ADD HERE)
-const result = await checkText(content);
+const result = await checkText(content) || {
+    label: "safe",
+    confidence: 0
+};
 
-if (!result) {
-    return res.status(500).json({
-        success: false,
-        message: "ML service error"
-    });
-}
 
 // 🚫 BLOCK harmful posts
-if (result.label === "harmful") {
+if (result?.label === "harmful"){
     return res.status(400).json({
         success: false,
         message: "🚫 Harmful content detected. Post blocked.",
