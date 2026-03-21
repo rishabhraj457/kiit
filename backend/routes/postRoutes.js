@@ -354,13 +354,14 @@ router.post('/', protect, asyncHandler(async (req, res) => {
     }
 
     // 🚫 BLOCK harmful posts
-    const postLabel = String(result?.label || "").toLowerCase();
+  const postLabel = (result?.label || "").toLowerCase();
 
-    const isPostHarmful =
-        postLabel.includes("harmful") ||
-        postLabel.includes("hate") ||
-        postLabel.includes("offensive") ||
-        postLabel.includes("toxic");
+const isPostHarmful =
+    (postLabel.includes("hate") ||
+     postLabel.includes("offensive") ||
+     postLabel.includes("abusive") ||
+     postLabel.includes("toxic")) &&
+    (result?.confidence || 0) > 0.6;
 
     if (isPostHarmful) {
         return res.status(400).json({
@@ -880,13 +881,14 @@ router.post('/:id/comments', protect, asyncHandler(async (req, res) => {
         console.error("❌ ML Service Error (comment):", error.message);
     }
 
-    const label = (result?.label || "").toLowerCase();
+   const label = (result?.label || "").toLowerCase();
 
-    const isHarmful =
-        label.includes("harmful") ||
-        label.includes("hate") ||
-        label.includes("offensive") ||
-        label.includes("toxic");
+const isHarmful =
+    (label.includes("hate") ||
+     label.includes("offensive") ||
+     label.includes("abusive") ||
+     label.includes("toxic")) &&
+    (result?.confidence || 0) > 0.6;
 
     const userAvatar = getAvatarUrl(req.user.avatar);
 
