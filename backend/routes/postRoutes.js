@@ -7,6 +7,7 @@ const cloudinary = require('cloudinary').v2;
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const NodeCache = require('node-cache');
+const { checkText } = require("../utils/mlService");
 
 const router = express.Router();
 
@@ -263,7 +264,25 @@ router.post('/', protect, asyncHandler(async (req, res) => {
             message: 'Content is required'
         });
     }
+// 🔥 ML CHECK (ADD HERE)
+const result = await checkText(content);
 
+if (!result) {
+    return res.status(500).json({
+        success: false,
+        message: "ML service error"
+    });
+}
+
+// 🚫 BLOCK harmful posts
+if (result.label === "harmful") {
+    return res.status(400).json({
+        success: false,
+        message: "🚫 Harmful content detected. Post blocked.",
+        flag: true,
+        confidence: result.confidence
+    });
+}
     // STARTUP SHOWCASE: Check submission deadline for showcase posts
     if (type === 'showcase') {
         const SUBMISSION_DEADLINE = new Date('2025-10-31T23:59:59').getTime();
@@ -762,6 +781,16 @@ router.post('/:id/comments', protect, asyncHandler(async (req, res) => {
         if (!validateText(text, 1, 1000)) {
             return res.status(400).json({ message: 'Comment text must be between 1 and 1000 characters' });
         }
+        // 🔥 ML CHECK FOR COMMENT
+// 🔥 ML CHECK FOR COMMENT
+const result = await checkText(text);
+
+if (!result) {
+    return res.status(500).json({ message: "ML service error" });
+}
+
+// ✅ Allow but flag if harmful
+const isHarmful = result.label === "harmful";
         
         // ✅ CONSISTENT: Use the same avatar helper
         const getAvatarUrl = (avatar) => {
@@ -779,6 +808,8 @@ router.post('/:id/comments', protect, asyncHandler(async (req, res) => {
             text,
             timestamp: new Date(),
             userId: req.user._id,
+            flag: isHarmful,
+    confidence: result?.confidence || 0
         };
         post.commentData.push(newComment);
         post.comments = post.commentData.length;
@@ -787,7 +818,13 @@ router.post('/:id/comments', protect, asyncHandler(async (req, res) => {
         // Clear cache
         cache.del(`post_${req.params.id}`);
         
-        res.status(201).json(post.commentData);
+        res.status(201).json({
+    comments: post.commentData,
+    flagged: isHarmful,
+    message: isHarmful
+        ? "⚠️ Comment posted but flagged as harmful"
+        : "✅ Comment posted"
+});
     } else {
         res.status(404).json({ message: 'Post not found' });
     }
