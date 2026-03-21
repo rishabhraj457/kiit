@@ -783,14 +783,13 @@ router.post('/:id/comments', protect, asyncHandler(async (req, res) => {
         }
         // 🔥 ML CHECK FOR COMMENT
 // 🔥 ML CHECK FOR COMMENT
-const result = await checkText(text);
-
-if (!result) {
-    return res.status(500).json({ message: "ML service error" });
-}
+const result = await checkText(text) || {
+    label: "safe",
+    confidence: 0
+};
 
 // ✅ Allow but flag if harmful
-const isHarmful = result.label === "harmful";
+const isHarmful = result?.label === "harmful";
         
         // ✅ CONSISTENT: Use the same avatar helper
         const getAvatarUrl = (avatar) => {
@@ -807,7 +806,7 @@ const isHarmful = result.label === "harmful";
             authorAvatar: userAvatar,
             text,
             timestamp: new Date(),
-            userId: req.user._id,
+            userId: req.user?._id || null,
             flag: isHarmful,
     confidence: result?.confidence || 0
         };
