@@ -390,7 +390,13 @@ const CommentItem = ({ comment, currentUser }) => {
                         {new Date(comment.timestamp).toLocaleDateString()} at {new Date(comment.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                 </div>
-                <p className="comment-text">{comment.text}</p>
+                <p className={`comment-text ${comment.flag ? "harmful-comment" : ""}`}>
+    {comment.text}
+</p>
+
+{comment.flag && (
+    <span className="harmful-badge">⚠️ Harmful</span>
+)}
             </div>
         </div>
     );
@@ -410,7 +416,7 @@ const CommentSection = ({ comments, onAddComment, onCloseComments, currentUser, 
         currentUser._id !== 'null'
     );
 
-    const handleAddCommentSubmit = (e) => {
+    const handleAddCommentSubmit = async (e) => {
         e.preventDefault();
         // CRITICAL FIX: Use proper login check
         if (!actuallyLoggedIn) {
@@ -418,8 +424,13 @@ const CommentSection = ({ comments, onAddComment, onCloseComments, currentUser, 
             return;
         }
         if (newCommentText.trim()) {
-            onAddComment(newCommentText);
-            setNewCommentText('');
+            const res = await onAddComment(newCommentText);
+
+if (res?.flagged) {
+    alert("⚠️ Your comment was flagged as harmful");
+}
+
+setNewCommentText('');
         } else {
             setShowCommentAlert(true);
         }

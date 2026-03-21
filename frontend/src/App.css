@@ -1,69 +1,43 @@
-/* App.css */
-
-/* ===== THEME VARIABLES ===== */
 :root {
-  /* Light theme variables */
-  --bg-primary: #f9fafb;
-  --bg-secondary: #f3f4f6;
-  --text-primary: #374151;
-  --text-secondary: #4b5563;
-  --border-color: #e5e7eb;
+  --bg-primary: #efecec;
+  --bg-secondary: #f8fafc;
+
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+
   --card-bg: #ffffff;
   --sidebar-bg: #ffffff;
   --header-bg: #ffffff;
-  --icon-color: #4b5563;
-  --action-btn-bg: #f3f4f6;
-  --action-btn-hover: #e5e7eb;
-  --modal-overlay: rgba(0, 0, 0, 0.5);
-  --modal-bg: #ffffff;
-  --input-bg: #ffffff;
-  --shadow-color: rgba(0, 0, 0, 0.1);
-  --placeholder-bg: #ffffff;
-  --placeholder-text: #6b7280;
-  --primary-color: #3b82f6;
+
+  --border-color: #dbe9fc;
+
+  --primary-color: #6366f1;
+  --primary-color-faded: rgba(99, 102, 241, 0.12);
+
+  --action-btn-bg: #f1f5f9; 
+  --action-btn-hover: #e2e8f0;
+
+  --input-bg: #e1dfdf;
+
+  --shadow-soft: 0 2px 8px rgba(15, 23, 42, 0.08);
+
   --danger-color: #ef4444;
   --text-on-primary: #ffffff;
-  --bg-hover: #e5e7eb;
-  --primary-color-faded: rgba(59, 130, 246, 0.2);
+  --bg-hover: #f1f5f9;
 
-  /* Scrollbar variables */
-  --scrollbar-track: #f1f1f1;
-  --scrollbar-thumb: #c1c1c1;
-  --scrollbar-thumb-hover: #a8a8a8;
-  --scrollbar-border: #e5e7eb;
+  --modal-overlay: rgba(0, 0, 0, 0.4);
+  --modal-bg: #ffffff;
+
+  --placeholder-bg: #f8fafc;
+  --placeholder-text: #94a3b8;
+
+  --icon-color: #64748b;
+
+  --scrollbar-track: #f1f5f9;
+  --scrollbar-thumb: #cbd5f5;
+  --scrollbar-thumb-hover: #94a3b8;
 }
 
-[data-theme="dark"] {
-  /* Dark theme variables */
-  --bg-primary: #121212;
-  --bg-secondary: #1e1e1e;
-  --text-primary: #e0e0e0;
-  --text-secondary: #a0a0a0;
-  --border-color: #333333;
-  --card-bg: #1e1e1e;
-  --sidebar-bg: #161616;
-  --header-bg: #1a1a1a;
-  --icon-color: #bb86fc;
-  --action-btn-bg: #333333;
-  --action-btn-hover: #444444;
-  --modal-overlay: rgba(0, 0, 0, 0.7);
-  --modal-bg: #242424;
-  --input-bg: #333333;
-  --shadow-color: rgba(0, 0, 0, 0.3);
-  --placeholder-bg: #2d2d2d;
-  --placeholder-text: #9ca3af;
-  --primary-color: #bb86fc;
-  --danger-color: #cf6679;
-  --text-on-primary: #000000;
-  --bg-hover: #2d2d2d;
-  --primary-color-faded: rgba(187, 134, 252, 0.2);
-
-  /* Scrollbar variables */
-  --scrollbar-track: #2d2d2d;
-  --scrollbar-thumb: #555555;
-  --scrollbar-thumb-hover: #777777;
-  --scrollbar-border: #444444;
-}
 
 /* Universal Box-Sizing for predictable layout */
 *,
@@ -118,7 +92,7 @@ body {
   left: 0;
   right: 0;
   background-color: var(--header-bg);
-  box-shadow: 0 1px 3px 0 var(--shadow-color), 0 1px 2px 0 var(--shadow-color);
+  box-shadow: var(--shadow-soft);
   border-bottom: 1px solid var(--border-color);
   z-index: 50;
   padding: 0.5rem 1rem;
@@ -167,7 +141,8 @@ body {
 .search-input {
   width: 100%;
   padding: 0.6rem 1rem 0.6rem 2.5rem;
-  border: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  border: none;
   border-radius: 9999px;
   font-size: 0.875rem;
   background-color: var(--input-bg);
@@ -212,7 +187,7 @@ body {
 }
 
 .login-button {
-  background-image: linear-gradient(to right, #7190fd, #9c77fe);
+  background-image: linear-gradient(to right, #6366f1, #8b5cf6);
   color: white;
   border: none;
   padding: 8px 16px;
@@ -423,7 +398,7 @@ body {
 
 /* Fix: Ensure consistent layout when active */
 .nav-button.active {
-  background-color: var(--action-btn-hover);
+  background-color: var(--primary-color-faded);
   color: var(--primary-color);
   box-shadow: 0 1px 2px 0 var(--shadow-color);
 }
@@ -594,7 +569,8 @@ body {
 .post-card {
   background-color: var(--card-bg);
   border-radius: 0.75rem;
-  box-shadow: 0 4px 6px -1px var(--shadow-color), 0 2px 4px -1px var(--shadow-color);
+  box-shadow: var(--shadow-soft);
+  transition: all 0.2s ease;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
@@ -615,8 +591,8 @@ body {
 }
 
 .post-card:hover {
-  /* transform: translateY(-3px); */
-  box-shadow: 0 6px 10px -2px var(--shadow-color), 0 3px 6px -1px var(--shadow-color);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
 }
 
 .post-header {
@@ -843,6 +819,7 @@ body {
 /* --- THE MAIN FIX FOR THE TWO BUTTONS --- */
 /* This rule will make all the like, comment, share, and other buttons rounded */
 .action-btn {
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -1334,7 +1311,7 @@ body {
 
 /* Styles for the "Go to Home" button */
 .btn-primary {
-  background-color: #5a67d8;
+  background-color: var(--primary-color);
   color: white;
   padding: 10px 20px;
   border-radius: 9999px;
@@ -1345,7 +1322,7 @@ body {
 }
 
 .btn-primary:hover {
-  background-color: #434c9c;
+  background-color: #4f46e5;
 }
 
 /* Basic styling for app logo link */
@@ -1361,7 +1338,7 @@ body {
   font-weight: bold;
   font-size: 1.1em;
   /* Applying the gradient text color */
-  background-image: linear-gradient(to right, #7190fd, #9c77fe);
+  background-image: linear-gradient(to right, #6366f1, #8b5cf6);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -1619,7 +1596,7 @@ img {
 .widget-title {
   font-size: 1rem;
   font-weight: 600;
-  background-image: linear-gradient(to right, #7190fd, #9c77fe);
+  background-image: linear-gradient(to right, #6366f1, #8b5cf6);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -1629,7 +1606,7 @@ img {
 .react-calendar__navigation__label {
   font-weight: 700;
   font-size: 1.05em;
-  background-image: linear-gradient(to right, #7190fd, #9c77fe);
+  background-image: linear-gradient(to right, #6366f1, #8b5cf6);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -2153,7 +2130,7 @@ img {
 .react-calendar__navigation__label {
   font-weight: 700;
   font-size: 1.05em;
-  background-image: linear-gradient(to right, #7190fd, #9c77fe);
+  background-image: linear-gradient(to right, #6366f1, #8b5cf6);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -4428,4 +4405,17 @@ body.modal-open {
     max-width: 100% !important;
     overflow: hidden !important;
   }
+}
+.harmful-comment {
+    color: #ff4d4f;
+    font-weight: 500;
+}
+
+.harmful-badge {
+    background: #ff4d4f;
+    color: white;
+    font-size: 12px;
+    padding: 2px 6px;
+    margin-left: 8px;
+    border-radius: 6px;
 }
