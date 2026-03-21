@@ -265,10 +265,14 @@ router.post('/', protect, asyncHandler(async (req, res) => {
         });
     }
 // 🔥 ML CHECK (ADD HERE)
-const result = await checkText(content) || {
-    label: "safe",
-    confidence: 0
-};
+let result = { label: "safe", confidence: 0 };
+
+try {
+    const mlResult = await checkText(content);
+    if (mlResult) result = mlResult;
+} catch (error) {
+    console.error("❌ ML Service Error (post):", error.message);
+}
 
 
 // 🚫 BLOCK harmful posts
@@ -780,10 +784,14 @@ router.post('/:id/comments', protect, asyncHandler(async (req, res) => {
         }
         // 🔥 ML CHECK FOR COMMENT
 // 🔥 ML CHECK FOR COMMENT
-const result = await checkText(text) || {
-    label: "safe",
-    confidence: 0
-};
+let result = { label: "safe", confidence: 0 };
+
+try {
+    const mlResult = await checkText(text);
+    if (mlResult) result = mlResult;
+} catch (error) {
+    console.error("❌ ML Service Error (comment):", error.message);
+}
 
 // ✅ Allow but flag if harmful
 const isHarmful = result?.label === "harmful";
